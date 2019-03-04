@@ -62,8 +62,15 @@ def ParseReviews(asin):
                  XPATH_REVIEW_BODY = './/span[@data-hook="review-body"]//text()'
                  XPATH_REVIEW_HEADER = './/span[@class="cr-original-review-content"]//text()'
                  XPATH_REVIEW_POSTED_DATE = './/span[@data-hook="review-date"]//text()'
+                 XPATH_CHECK_IF_VERIFIED = './/div[@class="a-row a-spacing-mini review-data review-format-strip"]/span'
 
                  raw_review_posted_date = review.xpath(XPATH_REVIEW_POSTED_DATE)
+                 verified_review = review.xpath(XPATH_CHECK_IF_VERIFIED)
+                 if verified_review:
+                      is_verified = True
+                 else:
+                      is_verified = False
+                 
                  try:
                      review_posted_date = dateparser.parse(''.join(raw_review_posted_date)).strftime('%d %b %Y')
                  except:
@@ -75,13 +82,16 @@ def ParseReviews(asin):
                                 'review_body': review_body,
                                 'review_posted_date': review_posted_date,
                                 'review_title': review_header,
+                                'verified_review': is_verified
                                }
                  reviews_list.append(review_dict)
                  
-         reviews_link = parser.xpath(XPATH_NEXT_PAGE)
-         for review_link in reviews_link:
-             review_page_url = 'http://www.amazon.in/' + review_link.attrib['href']
+         next_page_list = parser.xpath(XPATH_NEXT_PAGE)
+         for next_page in next_page_list:
+             review_page_url = 'http://www.amazon.in/' + next_page.attrib['href']
          if last_page_reached:
+             last_page = True
+         elif not last_page_reached and not next_page_list:
              last_page = True
 
      data = {
@@ -92,7 +102,7 @@ def ParseReviews(asin):
      return data
       
 def ReadAsin():
-    AsinList = ['B07J37JZQM']
+    AsinList = ['B01GVS09Z0']
     extracted_data = []
     for asin in AsinList:
         print("Downloading and processing page http://www.amazon.in/dp/" + asin)
